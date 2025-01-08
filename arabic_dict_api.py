@@ -42,7 +42,6 @@ async def lookup_word(request: DictionaryRequest):
     try:
         # Send request to the OpenAI ChatCompletion API
         start_time = time.time()
-        logging.info(api_key)
         response = client.chat.completions.create(model="gpt-4o-mini",
                                                   messages=[
                                                       {
