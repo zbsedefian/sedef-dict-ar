@@ -6,10 +6,11 @@ from openai import OpenAI
 from pydantic import BaseModel
 import time
 import os
+import json
 
 api_key = os.getenv("OPEN_API_KEY")
 if not api_key:
-    raise ValueError("API_KEY is not set")
+    raise ValueError("OPEN_API_KEY is not set")
 client = OpenAI(
     api_key=api_key,
 )
@@ -55,6 +56,7 @@ async def lookup_word(request: DictionaryRequest):
                                                           "content": request.word
                                                       }
                                                   ],
+                                                  response_format={ "type": "json_object" },
                                                   max_tokens=300)  # 210 maximum seen
         end_time = time.time()
         logging.info(f"OpenAPI Execution time: {end_time - start_time} seconds")
@@ -66,7 +68,7 @@ async def lookup_word(request: DictionaryRequest):
         response_text = response.choices[0].message.content.strip()
         logging.debug(response_text)
 
-        response_data = eval(response_text)
+        response_data = json.loads(response_text)
 
         return DictionaryResponse(
             word=response_data.get("word"),
@@ -78,6 +80,9 @@ async def lookup_word(request: DictionaryRequest):
             attributes=response_data.get("attributes")
         )
 
+    except json.JSONDecodeError as e:
+        logging.exception(f"Failed to parse response: {e}")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
     except openai.APIConnectionError as e:
         logging.exception("The server could not be reached")
         logging.exception(e.__cause__)  # an underlying Exception, likely raised within httpx.
