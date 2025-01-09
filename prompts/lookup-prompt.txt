@@ -1,0 +1,102 @@
+Return valid JSON using the exact structure below. Only strings are allowed—no booleans, nulls, or empty fields. Exclude enclitic pronouns and prepositional prefixes. Do not include formatting, backticks, new lines, or spaces. Provide detailed linguistic information for the Arabic word '{word}', ensuring the "attributes" sub-object contains only the sub-dictionary matching the "pos" value.
+
+For "pos" values:
+1. **If "pos" is "verb"**:
+   - Include only the "verb" sub-dictionary.
+   - From "tense", "mood", and "verb_form", select only **one appropriate value** for each.
+   - Include fully vocalized "related_forms", i.e. 3rd person masculine singular past, 3rd person masculine singular present, as masdar fields.
+   - Add fields to show:
+   - **Declined subject**: Who the verb is conjugated for (e.g., "3rd person masculine singular").
+   - **Object enclitic (if applicable)**: Who or what the object points at (e.g., "feminine singular").
+   - All "root"s are either triliteral or quadraliteral. You erroneously said عشّ was ع ش instead of the correct ع ش ش .
+
+2. **If "pos" is "noun"**:
+   - Include only the "noun" sub-dictionary.
+   - For "number", select only **one** of the following: "singular", "dual", "plural", or "uncountable".
+   - For "declension" input the correct declension type (e.g. "broken plural")
+   - Add **object enclitic (if applicable)** to indicate attached pronouns (e.g., "3rd person feminine singular").
+   - All "root"s are either triliteral or quadraliteral. You erroneously said عشّ was ع ش instead of the correct ع ش ش .
+   - Lemma field should be in the nominative indefinite case, i.e. ending in "-un".
+   - "case_endings" should be identified based on the noun's syntactic role:
+     - "-un" (ن nominative) for subjects and default forms.
+     - "-an" (ً accusative) for direct objects or when governed by نصب (accusative-inducing verbs/prepositions).
+     - "-in" (ٍ genitive) for objects of genitive-inducing prepositions or possessive constructs.
+     - Example: عشّاً is accusative. عّشٌ is nominative. عشٍّ is genitive.
+
+3. **If "pos" is "preposition"**:
+   - Include only the "preposition" sub-dictionary.
+   - Add **object enclitic (if applicable)** to indicate attached pronouns (e.g., "3rd person masculine singular").
+
+4. **Meanings**:
+   - `"english_meaning"` should represent the actual meaning of the input word, including declension or pronominal information (e.g., "he is writing it (f.)" for يكتبها, "he wrote them (f.)" for كتبهن).
+   - `"base_meaning"` should represent the base meaning of the lemma (dictionary form) (e.g. "to write")
+   - For example: عشاً will have "english_meaning": "a nest", "base_meaning": "nest"; يكتبها will have "english_meaning": "he is writing it (f.)", "base_meaning": "to write"
+
+The "word" field must match the input exactly without parsing. Ensure no non-string, null, or empty fields appear in the output. Attribute fields that are "none" or "" should simply be excluded.
+All the base object fields must be included. If you get something like عن (a preposition) without a real "lemma", just put عن as the lemma.
+
+{
+  "word": "كتبتاهم",
+  "language": "ar",
+  "pos": "noun",
+  "lemma": "كَِتَبَ",
+  "english_meaning": "they (f. dl.) wrote them (m. pl.)",
+  "base_meaning": "to write",
+  "attributes": {
+    "noun": {
+      "gender": ["masculine", "feminine"],
+      "number": ["singular", "dual", "plural", "uncountable"]
+      "plural_form": "كُتُبٌ",
+      "plural_type": ["sound", "broken"],
+      "case_endings": ["nominative", "accusative", "genitive"],
+      "diptote": ["false", "true"],
+      "root": "ك ت ب",
+      "object_enclitic": "3rd person feminine singular (this is an example)"
+    },
+    "verb": {
+      "root": "ك ت ب",
+      "conjugation_pattern": "regular (or hollow, etc.)",
+      "tense": ["past", "present", "imperative"],
+      "aspect": "perfective",
+      "voice": "active",
+      "mood": ["indicative", "subjunctive", "jussive"],
+      "related_forms": {
+        "past": "كَتَبَ",
+        "present": "يَكْتُبَُ",
+        "masdar": "كتابةٌ"
+      },
+      "transitivity": "transitive",
+      "verb_form": ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IV", "X", "XI", "XII", "XIII", "XIV", "XV",
+      "defective": ["False", "True"],
+      "declined_subject": "3nd person feminine dual (this is an example for كتبتاهم)",
+      "object_enclitic": "3rd person masculine plural (this is an example for كتبتاهم)"
+    },
+    "adjective": {
+      "gender": "feminine",
+      "plurality": "plural",
+      "comparative_form": "أكبر",
+      "root": "ك ت ب"
+    },
+    "pronoun": {
+      "person": "3rd",
+      "number": "singular",
+      "gender": "masculine",
+      "type": "subject"
+    },
+    "adverb": {
+      "type": "adverb of time",
+      "derived_from_noun": ["False", "True"]
+    },
+    "preposition": {
+      "governed_case": "genitive",
+      "usage_examples": ["في البيت", "في الكتاب"],
+      "meaning": ["in", "about"],
+      "object_enclitic": "3rd person feminine singular (this is an example)"
+    },
+    "particle": {
+      "type": "negation (this is an example)"",
+      "effect_on_verbs": "subjunctive mood (this is an example)"]
+      "usage_examples": ["لن أفعل", "لن يذهب"]
+    }
+  }
+}

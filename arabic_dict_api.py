@@ -15,14 +15,14 @@ client = OpenAI(
 )
 app = FastAPI()
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[logging.FileHandler("app.log"), logging.StreamHandler()]
 )
 
 
-with open("prompt.txt", "r") as file:
-    prompt = file.read()
+with open("prompts/lookup-prompt.txt", "r") as file:
+    lookup_prompt = file.read()
 
 
 class DictionaryRequest(BaseModel):
@@ -48,18 +48,19 @@ async def lookup_word(request: DictionaryRequest):
                                                   messages=[
                                                       {
                                                           "role": "system",
-                                                          "content": prompt
+                                                          "content": lookup_prompt
                                                       },
                                                       {
                                                           "role": "user",
                                                           "content": request.word
                                                       }
                                                   ],
-                                                  max_tokens=300)  # 206 maximum seen
+                                                  max_tokens=300)  # 210 maximum seen
         end_time = time.time()
         logging.info(f"OpenAPI Execution time: {end_time - start_time} seconds")
         logging.info(f"Token count: Input {response.usage.prompt_tokens}, "
                      f"Output {response.usage.completion_tokens}, "
+                     f"Cached {response.usage.prompt_tokens_details.cached_tokens}, "
                      f"Total {response.usage.total_tokens}")
 
         response_text = response.choices[0].message.content.strip()
@@ -92,6 +93,11 @@ async def lookup_word(request: DictionaryRequest):
     except Exception as e:
         logging.exception("An unexpected error occurred")
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 
 # Run using: uvicorn arabic_dict_app:app --reload

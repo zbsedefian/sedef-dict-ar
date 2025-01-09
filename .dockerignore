@@ -4,3 +4,7 @@ __pycache__/
 .env
 .git/
 .idea/
+env.yaml
+/infra
+/k8s
+.venv/

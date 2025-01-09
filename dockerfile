@@ -1,7 +1,14 @@
+#!/bin/bash
+
 FROM python:3.9-slim
-WORKDIR /app
+
+# Install dependencies
 COPY requirements.txt .
-COPY prompt.txt .
 RUN pip install -r requirements.txt
-COPY . .
-CMD ["python", "arabic_dict_api.py"]
+
+# Copy application files
+COPY . /app
+WORKDIR /app
+
+# Run the app
+CMD ["uvicorn", "arabic_dict_api:app", "--host", "0.0.0.0", "--port", "8000"]
