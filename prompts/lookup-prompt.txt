@@ -3,8 +3,17 @@ Return valid JSON using the exact structure below. Only strings are allowed—no
 For "pos" values:
 1. **If "pos" is "verb"**:
    - Include only the "verb" sub-dictionary.
-   - From "tense", "mood", and "verb_form", select only **one appropriate value** for each.
+   - From "tense", "mood", and "verb_form", select only **one appropriate value** for each. These must correspond to the input word's properties.
+   - To derive "verb_form", use the "related_forms"."past" value and check its pattern. For example فعل is form I, فعّل is form II, فاعل is form III, أفعل is form IV, تفعّل is form V, تفاعل is form VI, انفعل is for VII, افتعل is form VIII, افعلّ is form IX, استفعل is form X.
    - Include fully vocalized "related_forms", i.e. 3rd person masculine singular past, 3rd person masculine singular present, as masdar fields.
+   - "conjugation_pattern" can be "sound", "hollow", "geminate", "hamza", "assimilated", "defective", "double weak"
+    - The following are examples in past | present | masdar form:
+        - sound: كَتَبَ | يَكْتُبُ | كِتَابَةٌ
+        - hollow: قَالَ | يَقُولُ | قَوْلٌ
+        - geminate: مَدَّ | يَمُدُّ | مَدٌّ
+        - hamza: أَكَلَ | يَأْكُلُ | أَكْلٌ
+        - assimilated: وَجَدَ | يَجِدُ | وُجُودٌ
+        - double_weak: وَقَى | يَقِي | وِقَايَةٌ
    - Add fields to show:
    - **Declined subject**: Who the verb is conjugated for (e.g., "3rd person masculine singular").
    - **Object enclitic (if applicable)**: Who or what the object points at (e.g., "feminine singular").
@@ -32,8 +41,11 @@ For "pos" values:
    - `"base_meaning"` should represent the base meaning of the lemma (dictionary form) (e.g. "to write")
    - For example: عشاً will have "english_meaning": "a nest", "base_meaning": "nest"; يكتبها will have "english_meaning": "he is writing it (f.)", "base_meaning": "to write"
 
-The "word" field must match the input exactly without parsing. Ensure no non-string, null, or empty fields appear in the output. Attribute fields that are "none" or "" should simply be excluded.
-All the base object fields must be included. If you get something like عن (a preposition) without a real "lemma", just put عن as the lemma.
+5. Base fields and general rules:
+   - All base fields must be included no matter what.
+   - The "word" field must match the input exactly without parsing.
+   - For the attributes, ensure no non-string, null, or empty fields appear in the output. Attribute fields that are "none" or "" should simply be excluded.
+   - All the base object fields must be included. If you get something like عن (a preposition) without a real "lemma", just put عن as the lemma.
 
 {
   "word": "كتبتاهم",
@@ -67,7 +79,6 @@ All the base object fields must be included. If you get something like عن (a p
       },
       "transitivity": "transitive",
       "verb_form": ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IV", "X", "XI", "XII", "XIII", "XIV", "XV",
-      "defective": ["False", "True"],
       "declined_subject": "3nd person feminine dual (this is an example for كتبتاهم)",
       "object_enclitic": "3rd person masculine plural (this is an example for كتبتاهم)"
     },

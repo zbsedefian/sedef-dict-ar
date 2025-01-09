@@ -43,7 +43,6 @@ class DictionaryResponse(BaseModel):
 @app.post("/lookup", response_model=DictionaryResponse)
 async def lookup_word(request: DictionaryRequest):
     try:
-        # Send request to the OpenAI ChatCompletion API
         start_time = time.time()
         response = client.chat.completions.create(model="gpt-4o-mini",
                                                   messages=[
@@ -57,29 +56,18 @@ async def lookup_word(request: DictionaryRequest):
                                                       }
                                                   ],
                                                   response_format={ "type": "json_object" },
-                                                  max_tokens=300)  # 210 maximum seen
+                                                  max_tokens=300)  # 213 maximum seen
         end_time = time.time()
         logging.info(f"OpenAPI Execution time: {end_time - start_time} seconds")
         logging.info(f"Token count: Input {response.usage.prompt_tokens}, "
                      f"Output {response.usage.completion_tokens}, "
                      f"Cached {response.usage.prompt_tokens_details.cached_tokens}, "
                      f"Total {response.usage.total_tokens}")
+        logging.debug(response)
 
         response_text = response.choices[0].message.content.strip()
-        logging.debug(response_text)
-
         response_data = json.loads(response_text)
-
-        return DictionaryResponse(
-            word=response_data.get("word"),
-            language=response_data.get("language"),
-            pos=response_data.get("pos"),
-            lemma=response_data.get("lemma"),
-            english_meaning=response_data.get("english_meaning"),
-            base_meaning=response_data.get("base_meaning"),
-            attributes=response_data.get("attributes")
-        )
-
+        return DictionaryResponse(**response_data)
     except json.JSONDecodeError as e:
         logging.exception(f"Failed to parse response: {e}")
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
