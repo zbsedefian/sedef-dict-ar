@@ -1,5 +1,6 @@
 import logging
 
+import openai
 from fastapi import FastAPI, HTTPException
 from openai import OpenAI
 from pydantic import BaseModel
@@ -34,6 +35,7 @@ class DictionaryResponse(BaseModel):
     pos: str
     lemma: str
     english_meaning: str
+    base_meaning: str
     attributes: dict
 
 
@@ -53,16 +55,12 @@ async def lookup_word(request: DictionaryRequest):
                                                           "content": request.word
                                                       }
                                                   ],
-                                                  max_tokens=300)  # Consistently 181
+                                                  max_tokens=300)  # 206 maximum seen
         end_time = time.time()
         logging.info(f"OpenAPI Execution time: {end_time - start_time} seconds")
         logging.info(f"Token count: Input {response.usage.prompt_tokens}, "
                      f"Output {response.usage.completion_tokens}, "
                      f"Total {response.usage.total_tokens}")
-
-        if response.choices[0].finish_reason != 'stop':
-            logging.error(f"OpenAPI finished incorrectly: {response.choices[0].finish_reason}")
-            raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
         response_text = response.choices[0].message.content.strip()
         logging.debug(response_text)
@@ -75,8 +73,22 @@ async def lookup_word(request: DictionaryRequest):
             pos=response_data.get("pos"),
             lemma=response_data.get("lemma"),
             english_meaning=response_data.get("english_meaning"),
+            base_meaning=response_data.get("base_meaning"),
             attributes=response_data.get("attributes")
         )
+
+    except openai.APIConnectionError as e:
+        logging.exception("The server could not be reached")
+        logging.exception(e.__cause__)  # an underlying Exception, likely raised within httpx.
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+    except openai.RateLimitError as e:
+        logging.exception("A 429 status code was received; we should back off a bit.")
+        raise HTTPException(status_code=429, detail=f"An unexpected error occurred: {str(e)}")
+    except openai.APIStatusError as e:
+        logging.exception("Another non-200-range status code was received")
+        logging.exception(e.status_code)
+        logging.exception(e.response)
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
     except Exception as e:
         logging.exception("An unexpected error occurred")
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
