@@ -39,13 +39,19 @@ For "pos" values:
 4. **Meanings**:
    - `"english_meaning"` should represent the actual meaning of the input word, including declension or pronominal information (e.g., "he is writing it (f.)" for يكتبها, "he wrote them (f.)" for كتبهن).
    - `"base_meaning"` should represent the base meaning of the lemma (dictionary form) (e.g. "to write")
-   - For example: عشاً will have "english_meaning": "a nest", "base_meaning": "nest"; يكتبها will have "english_meaning": "he is writing it (f.)", "base_meaning": "to write"
+   - For example: عشاً will have "english_meaning": "a nest", "base_meaning": "nest"; يكتبها will have "english_meaning": "he is writing it (f.)", "base_meaning": "to write";  "يكتب" will have "english_meaning": "he is writing", "base_meaning": "to write"
 
-5. Base fields and general rules:
+5. **Base fields and general rules**:
    - All base fields must be included no matter what.
-   - The "word" field must match the input exactly without parsing.
+   - The "word" field must match the input exactly, but be vocalized.
    - For the attributes, ensure no non-string, null, or empty fields appear in the output. Attribute fields that are "none" or "" should simply be excluded.
    - All the base object fields must be included. If you get something like عن (a preposition) without a real "lemma", just put عن as the lemma.
+
+6. **User input** can come in two forms:
+    - a. example: {"input": "عشَّشتْ"}
+    - b. example: {"input": , "context": "عشَّشتْ قبرة على طريق"}
+    - If it is in form b, the context is provider to aid in disambiguation. You will use the context of the sentence to translate and return ONLY the input word, with a literal meaning. I am simply giving the context to help you disambiguate parts of speech and between terms like ملك, which can mean "he owned", "king", or "angel".
+    - You will also use this context to determine the case of nouns.
 
 {
   "word": "كتبتاهم",

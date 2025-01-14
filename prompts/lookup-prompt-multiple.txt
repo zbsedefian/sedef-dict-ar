@@ -1,0 +1,118 @@
+Prompt: Accept a full Arabic sentence as input, analyze it, and break it down into all its constituent parts (words or constructed phrases like "يوم مم الأيام"). For each word in the sentence, return a JSON object following the exact structure and detailed rules below. The output should be an array list of JSON objects representing each word in the sentence. Exclude enclitic pronouns and prepositional prefixes when breaking down the sentence.
+
+Return valid JSON with the exact fields and structure specified. Only strings are allowed in the output—no booleans, nulls, or empty fields are permitted. Exclude any unnecessary fields. Ensure detailed linguistic information is provided, and the "attributes" sub-object contains only the sub-dictionary matching the "pos" value of the word. Follow these rules for the "pos" values:
+
+    Verb:
+        Include only the "verb" sub-dictionary under "attributes".
+        Select the appropriate values for "tense", "mood", and "verb_form" based on the input word's properties.
+        Ensure "related_forms" includes fully vocalized forms of the 3rd person masculine singular past, present, and masdar.
+        Identify the correct "conjugation_pattern" (e.g., sound, hollow, geminate, hamza, assimilated, defective, double weak).
+        Provide the "declined_subject" field, indicating the subject's person, gender, and number.
+        Include "object_enclitic" if applicable.
+
+    Noun:
+        Include only the "noun" sub-dictionary under "attributes".
+        Specify the correct "number" (singular, dual, plural, or uncountable) and "declension" type.
+        Add "object_enclitic" if applicable.
+        Ensure "lemma" is in the nominative indefinite case (ending in "-un").
+        Provide accurate "case_endings" based on the syntactic role of the word.
+
+    Preposition:
+        Include only the "preposition" sub-dictionary under "attributes".
+        Add "object_enclitic" if applicable.
+
+    Adjective:
+        Include the "adjective" sub-dictionary under "attributes".
+        Specify "gender", "plurality", and "comparative_form" if applicable.
+
+    Pronoun:
+        Include the "pronoun" sub-dictionary under "attributes".
+        Specify "person", "number", "gender", and "type" (e.g., subject or object pronoun).
+
+    Adverb:
+        Include the "adverb" sub-dictionary under "attributes".
+        Specify "type" (e.g., adverb of time, adverb of place) and whether it is "derived_from_noun".
+
+    Particle:
+        Include the "particle" sub-dictionary under "attributes".
+        Specify "type" (e.g., negation, emphasis) and "effect_on_verbs" if applicable.
+
+    Meanings:
+        Provide "english_meaning" for the contextual meaning of the word, including any declension or enclitic information.
+        Provide "base_meaning" for the base meaning of the lemma (dictionary form).
+
+Ensure that:
+
+    The "word" field matches the exact input but is fully vocalized.
+    The "lemma" field contains the correct base form of the word, fully vocalized.
+    The "root" is correctly identified as triliteral or quadriliteral.
+    All base fields are always included in the output. If a word lacks a proper "lemma" (e.g., a preposition), use the word itself as the lemma.
+
+Example Input:
+Sentence: "كتب الولد الدرس"
+
+
+{
+  "translation": "The boy wrote the lesson.",
+  "words": [
+      {
+        "word": "كَتَبَ",
+        "language": "ar",
+        "pos": "verb",
+        "lemma": "كَتَبَ",
+        "english_meaning": "he wrote",
+        "base_meaning": "to write",
+        "attributes": {
+          "verb": {
+            "root": "ك ت ب",
+            "conjugation_pattern": "sound",
+            "tense": "past",
+            "mood": "indicative",
+            "verb_form": "I",
+            "related_forms": {
+              "past": "كَتَبَ",
+              "present": "يَكْتُبُ",
+              "masdar": "كِتَابَةٌ"
+            },
+            "declined_subject": "3rd person masculine singular"
+          }
+        }
+      },
+      {
+        "word": "الْوَلَدُ",
+        "language": "ar",
+        "pos": "noun",
+        "lemma": "وَلَدٌ",
+        "english_meaning": "the boy",
+        "base_meaning": "boy",
+        "attributes": {
+          "noun": {
+            "gender": "masculine",
+            "number": "singular",
+            "plural_form": "أَوْلَادٌ",
+            "plural_type": "broken",
+            "case_endings": "nominative",
+            "root": "و ل د"
+          }
+        }
+      },
+      {
+        "word": "الدَّرْسَ",
+        "language": "ar",
+        "pos": "noun",
+        "lemma": "دَرْسٌ",
+        "english_meaning": "the lesson",
+        "base_meaning": "lesson",
+        "attributes": {
+          "noun": {
+            "gender": "masculine",
+            "number": "singular",
+            "case_endings": "accusative",
+            "root": "د ر س"
+          }
+        }
+      }
+    ]
+}
+
+This output represents a valid JSON array list, with each word analyzed in detail according to the provided linguistic rules.
