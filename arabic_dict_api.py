@@ -21,11 +21,8 @@ max_tokens_sentence = 5000
 api_key = os.getenv("OPEN_API_KEY")
 if not api_key:
     raise ValueError("OPEN_API_KEY is not set")
-client = OpenAI(
+client = AsyncOpenAI(
     api_key=api_key,
-)
-asyncclient = AsyncOpenAI(
-    api_key=api_key,  # This is the default and can be omitted
 )
 app = FastAPI()
 logging.basicConfig(
@@ -63,6 +60,7 @@ class DictionaryResponse(BaseModel):
     lemma: str
     english_meaning: str
     base_meaning: str
+    transliteration: str
     attributes: dict
 
 class SentenceLookupResponse(BaseModel):
@@ -81,6 +79,7 @@ class TranslationRequest(BaseModel):
 
 class TranslationResponse(BaseModel):
     translation: str
+    vocalized_sentence: str
 
 
 def is_arabic(word):
@@ -247,10 +246,10 @@ async def lookup_sentence(request: LookupRequest):
 
         words = input_text.split()
 
-        async def translate(word: str):
-            translation_prompt = 'Translate the following Arabic sentence into English. Only return valid JSON in this format: {"translation": "Example of a translation."}'
+        async def translate_sentence(lookup_request: LookupRequest):
+            translation_prompt = 'Translate into English and fully vocalize the following Arabic sentence. Return in valid JSON format only: {"translation": "The lark nested by the road",  "vocalized_sentence": "عَشَّشَتْ قُبَّرَةٌ عَلَى طَرِيقٍ"}'
             start_time = time.time()
-            response = client.chat.completions.create(
+            response = await client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
                     {
@@ -259,22 +258,23 @@ async def lookup_sentence(request: LookupRequest):
                     },
                     {
                         "role": "user",
-                        "content": word
+                        "content": lookup_request.model_dump_json()
                     }
                 ],
                 response_format={"type": "json_object"},
-                max_tokens=200
+                # max_tokens=200
             )
             end_time = time.time()
             logging.info(response)
             logging.info(f"OpenAPI Execution time: {end_time - start_time} seconds")
             response_data = json.loads(response.choices[0].message.content.strip())
-            return response_data.get("translation")
+            return TranslationResponse(translation=response_data.get("translation"),
+                                       vocalized_sentence=response_data.get("vocalized_sentence"))
 
-        async def call_openapi(lookup_request: AsyncLookupRequest):
+        async def translate_word(lookup_request: AsyncLookupRequest):
             try:
                 logging.info(lookup_request)
-                response = await asyncclient.chat.completions.create(
+                response = await client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[
                         {
@@ -287,7 +287,7 @@ async def lookup_sentence(request: LookupRequest):
                         }
                     ],
                     response_format={"type": "json_object"},
-                    max_tokens=max_tokens_word
+                    # max_tokens=max_tokens_word
                 )
                 response_text = response.choices[0].message.content.strip()
                 response_data = json.loads(response_text)
@@ -299,24 +299,21 @@ async def lookup_sentence(request: LookupRequest):
                 logging.exception(f"Failed to process '{lookup_request}': {str(e)}")
                 return None
 
-        # Run OpenAPI calls concurrently for all words
+        # Start OpenAPI calls
         start_time = time.time()
 
-        translation_task = translate(input_text)
-        word_lookup_tasks = [call_openapi(AsyncLookupRequest(input=word, context=input_text)) for word in words]
-
-        translation_result, word_responses = await asyncio.gather(
-            translation_task,
-            asyncio.gather(*word_lookup_tasks)
-        )
+        translation_response = await translate_sentence(request)
+        word_lookup_tasks = [translate_word(AsyncLookupRequest(input=word,
+                                                               context=translation_response.vocalized_sentence))
+                             for word in words]
+        word_responses = await asyncio.gather(*word_lookup_tasks)
 
         end_time = time.time()
         logging.info(f"OpenAPI Execution time: {end_time - start_time} seconds")
 
-        logging.info(translation_result)
         logging.info(word_responses)
         return SentenceLookupResponse(
-            translation=translation_result,
+            translation=translation_response.translation,
             words=word_responses
         )
 

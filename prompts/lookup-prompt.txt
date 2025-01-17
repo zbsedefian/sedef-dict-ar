@@ -46,18 +46,21 @@ For "pos" values:
    - The "word" field must match the input exactly, but be vocalized.
    - For the attributes, ensure no non-string, null, or empty fields appear in the output. Attribute fields that are "none" or "" should simply be excluded.
    - All the base object fields must be included. If you get something like عن (a preposition) without a real "lemma", just put عن as the lemma.
+   - The "transliteration" field will be the transliteration of the Arabic word in Latin characters, preferably using the Hans Wehr Classical Arabic / Modern Standard Arabic standard.
 
 6. **User input** can come in two forms:
     - a. example: {"input": "عشَّشتْ"}
     - b. example: {"input": , "context": "عشَّشتْ قبرة على طريق"}
     - If it is in form b, the context is provider to aid in disambiguation. You will use the context of the sentence to translate and return ONLY the input word, with a literal meaning. I am simply giving the context to help you disambiguate parts of speech and between terms like ملك, which can mean "he owned", "king", or "angel".
-    - You will also use this context to determine the case of nouns.
+    - You will also use this context to determine the case of nouns. You will receive a fully vocalized sentence, so you must gloss the individual words to its occurrence in the context. For example, if you have {"input": "طريق", "context": " "عشَّشتْ قبرة على طريق""}, you must return "طريقٍ" ('tariiqin'), in the genitive case.
+    - Using the "context", you must decide مِن 'from', مَن 'who', منّ "manna", or if "كتب" means "books", or "he wrote". You cannot get this wrong.
 
 {
   "word": "كتبتاهم",
   "language": "ar",
   "pos": "noun",
   "lemma": "كَِتَبَ",
+  "transliteration": "katab-ta-hum",
   "english_meaning": "they (f. dl.) wrote them (m. pl.)",
   "base_meaning": "to write",
   "attributes": {
